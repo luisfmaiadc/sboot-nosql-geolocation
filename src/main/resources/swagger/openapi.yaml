@@ -1,0 +1,56 @@
+openapi: 3.0.3
+info:
+  title: API de Geolocalização
+  version: 1.0.0
+  description: Sistema de Geolocalização.
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /location:
+    get:
+      summary: Pesquisa de logradouros por CEP.
+      operationId: searchPlace
+      tags:
+        - Search
+      parameters:
+        - in: query
+          name: cep
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Local encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaceResponse'
+
+components:
+  schemas:
+    PlaceResponse:
+      type: object
+      properties:
+        cep:
+          type: string
+        estado:
+          type: string
+        cidade:
+          type: string
+        bairro:
+          type: string
+        rua:
+          type: string
+        geolocalizacao:
+          type: array
+          items:
+            type: object
+            properties:
+              latitude:
+                type: integer
+                format: int64
+              longitude:
+                type: integer
+                format: int64

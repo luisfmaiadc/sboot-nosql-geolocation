@@ -19,6 +19,7 @@ paths:
           name: cep
           schema:
             type: string
+            pattern: '^[0-9]{8}$'
           required: true
       responses:
         '200':

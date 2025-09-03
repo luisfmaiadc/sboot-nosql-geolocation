@@ -27,11 +27,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PlaceResponse'
+                $ref: '#/components/schemas/GeolocationResponse'
 
 components:
   schemas:
-    PlaceResponse:
+    GeolocationResponse:
       type: object
       properties:
         cep:
@@ -42,16 +42,38 @@ components:
           type: string
         bairro:
           type: string
-        rua:
+        logradouro:
           type: string
         geolocalizacao:
-          type: array
-          items:
-            type: object
-            properties:
-              latitude:
-                type: integer
-                format: int64
-              longitude:
-                type: integer
-                format: int64
+          type: object
+          properties:
+            latitude:
+              type: string
+            longitude:
+              type: string
+
+    BrasilApiResponse:
+      type: object
+      properties:
+        cep:
+          type: string
+        state:
+          type: string
+        city:
+          type: string
+        neighborhood:
+          type: string
+        street:
+          type: string
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+            coordinates:
+              type: object
+              properties:
+                latitude:
+                  type: string
+                longitude:
+                  type: string

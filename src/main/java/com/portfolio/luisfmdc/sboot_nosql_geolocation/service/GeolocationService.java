@@ -1,8 +1,9 @@
 package com.portfolio.luisfmdc.sboot_nosql_geolocation.service;
 
-import com.portfolio.luisfmdc.model.PlaceResponse;
+
+import com.portfolio.luisfmdc.model.GeolocationResponse;
 
 public interface GeolocationService {
 
-    PlaceResponse searchPlace(String cep);
+    GeolocationResponse searchPlace(String cep);
 }

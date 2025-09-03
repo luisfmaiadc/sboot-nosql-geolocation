@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: sboot-nosql-geolocation
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/DBGeolocation
+
+services:
+  brasilapi:
+    url: https://brasilapi.com.br/api/cep/v2

@@ -80,6 +80,8 @@ components:
       properties:
         id:
           type: string
+        nome:
+          type: string
         cep:
           type: string
         rua:
@@ -131,6 +133,8 @@ components:
       properties:
         cep:
           type: string
+        nome:
+          type: string
         numero:
           type: string
         avaliacao:
@@ -138,6 +142,7 @@ components:
           format: double
       required:
         - cep
+        - nome
         - numero
         - avaliacao
 

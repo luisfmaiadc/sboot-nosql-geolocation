@@ -50,7 +50,7 @@ public class PlaceServiceImpl implements PlaceService {
     public PlaceResponse insertNewPlace(NewPlaceRequest request) {
         SearchPlaceResponse searchPlaceResponse = searchPlace(request.getCep());
         try {
-            Place newPlace = repository.insert(new Place(searchPlaceResponse, request.getNumero(), request.getAvaliacao()));
+            Place newPlace = repository.insert(new Place(searchPlaceResponse, request));
             return placeMapper.toPlaceResponse(newPlace);
         } catch (Exception e) {
             throw new RuntimeException("Não foi possível inserir o novo registro na base de dados.");

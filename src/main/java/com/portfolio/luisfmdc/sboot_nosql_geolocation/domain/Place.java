@@ -1,5 +1,6 @@
 package com.portfolio.luisfmdc.sboot_nosql_geolocation.domain;
 
+import com.portfolio.luisfmdc.model.NewPlaceRequest;
 import com.portfolio.luisfmdc.model.SearchPlaceResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +18,7 @@ public class Place {
 
     @Id
     private String id;
+    private String name;
     private String cep;
     private String street;
     private String number;
@@ -26,14 +28,15 @@ public class Place {
     private Geolocation geolocation;
     private Double rating;
 
-    public Place(SearchPlaceResponse searchPlaceResponse, String numero, Double avaliacao) {
+    public Place(SearchPlaceResponse searchPlaceResponse, NewPlaceRequest request) {
+        this.name = request.getNome();
         this.cep = searchPlaceResponse.getCep();
         this.street = searchPlaceResponse.getRua();
-        this.number = numero;
+        this.number = request.getNumero();
         this.neighborhood = searchPlaceResponse.getBairro();
         this.city = searchPlaceResponse.getCidade();
         this.state = searchPlaceResponse.getEstado();
         this.geolocation = new Geolocation(searchPlaceResponse.getGeolocalizacao().getLatitude(), searchPlaceResponse.getGeolocalizacao().getLongitude());
-        this.rating = avaliacao;
+        this.rating = request.getAvaliacao();
     }
 }

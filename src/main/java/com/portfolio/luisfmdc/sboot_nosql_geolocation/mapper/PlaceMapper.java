@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PlaceMapper {
 
+    @Mapping(source = "name", target = "nome")
     @Mapping(source = "street", target = "rua")
     @Mapping(source = "number", target = "numero")
     @Mapping(source = "neighborhood", target = "bairro")

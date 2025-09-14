@@ -27,22 +27,70 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GeolocationResponse'
+                $ref: '#/components/schemas/SearchPlaceResponse'
+        '400':
+          description: CEP inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Erro na requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+
+    post:
+      summary: Cadastrar um novo local.
+      operationId: insertNewPlace
+      tags:
+        - Insert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPlaceRequest'
+      responses:
+        '201':
+          description: Local registrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaceResponse'
+        '400':
+          description: Payload inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Erro na requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+
 
 components:
   schemas:
-    GeolocationResponse:
+    PlaceResponse:
       type: object
       properties:
+        id:
+          type: string
         cep:
           type: string
-        estado:
+        rua:
           type: string
-        cidade:
+        numero:
           type: string
         bairro:
           type: string
-        logradouro:
+        cidade:
+          type: string
+        estado:
           type: string
         geolocalizacao:
           type: object
@@ -51,29 +99,59 @@ components:
               type: string
             longitude:
               type: string
+        avaliacao:
+          type: number
+          format: double
 
-    BrasilApiResponse:
+    SearchPlaceResponse:
       type: object
       properties:
         cep:
           type: string
-        state:
+        rua:
           type: string
-        city:
+        bairro:
           type: string
-        neighborhood:
+        cidade:
           type: string
-        street:
+        estado:
           type: string
-        location:
+        geolocalizacao:
           type: object
           properties:
-            type:
-              type: string
-            coordinates:
-              type: object
-              properties:
-                latitude:
-                  type: string
-                longitude:
-                  type: string
+            latitude:
+              type: number
+              format: double
+            longitude:
+              type: number
+              format: double
+
+    NewPlaceRequest:
+      type: object
+      properties:
+        cep:
+          type: string
+        numero:
+          type: string
+        avaliacao:
+          type: number
+          format: double
+      required:
+        - cep
+        - numero
+        - avaliacao
+
+    StandardError:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+      required:
+        - timestamp
+        - status
+        - error

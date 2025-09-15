@@ -5,10 +5,12 @@ import com.portfolio.luisfmdc.sboot_nosql_geolocation.config.exception.ResourceN
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -41,5 +43,16 @@ public class GlobalExceptionHandler {
                 "Ocorreu um erro inesperado no servidor."
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<StandardError> methodArgumentNotValid(MethodArgumentNotValidException e) {
+        String fieldError = Objects.requireNonNull(e.getFieldError()).getField();
+        StandardError err = new StandardError(
+                OffsetDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Atributo " + fieldError + " inválido."
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
     }
 }

@@ -133,13 +133,20 @@ components:
       properties:
         cep:
           type: string
+          pattern: '^[0-9]{8}$'
         nome:
           type: string
+          minLength : 2
+          maxLength: 50
         numero:
           type: string
+          minLength: 1
+          maxLength: 7
         avaliacao:
           type: number
           format: double
+          minimum: 0
+          maximum: 5
       required:
         - cep
         - nome

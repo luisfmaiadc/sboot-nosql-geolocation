@@ -1,5 +1,6 @@
 package com.portfolio.luisfmdc.sboot_nosql_geolocation.config;
 
+import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,5 +24,10 @@ public class ApiConfig {
         converter.setCustomConversions(mongoCustomConversions);
         converter.setTypeMapper(new DefaultMongoTypeMapper(null));
         return converter;
+    }
+
+    @Bean
+    public JsonNullableModule jsonNullableModule() {
+        return new JsonNullableModule();
     }
 }

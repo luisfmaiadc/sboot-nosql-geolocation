@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 public interface PlaceMapper {
 
     @Mapping(source = "name", target = "nome")
+    @Mapping(source = "addressComplement", target = "complemento")
     @Mapping(source = "street", target = "rua")
     @Mapping(source = "number", target = "numero")
     @Mapping(source = "neighborhood", target = "bairro")

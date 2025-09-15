@@ -19,6 +19,7 @@ public class Place {
     @Id
     private String id;
     private String name;
+    private String addressComplement;
     private String cep;
     private String street;
     private String number;
@@ -30,6 +31,7 @@ public class Place {
 
     public Place(SearchPlaceResponse searchPlaceResponse, NewPlaceRequest request) {
         this.name = request.getNome();
+        this.addressComplement = request.getComplemento() != null && request.getComplemento().isPresent() ? request.getComplemento().get() : null;
         this.cep = searchPlaceResponse.getCep();
         this.street = searchPlaceResponse.getRua();
         this.number = request.getNumero();

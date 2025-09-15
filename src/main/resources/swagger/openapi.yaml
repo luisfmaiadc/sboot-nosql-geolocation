@@ -82,6 +82,8 @@ components:
           type: string
         nome:
           type: string
+        complemento:
+          type: string
         cep:
           type: string
         rua:
@@ -138,6 +140,9 @@ components:
           type: string
           minLength : 2
           maxLength: 50
+        complemento:
+          type: string
+          nullable: true
         numero:
           type: string
           minLength: 1

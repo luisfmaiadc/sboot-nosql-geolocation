@@ -8,10 +8,10 @@ servers:
   - url: http://localhost:8080
 
 paths:
-  /location:
+  /v1/findLocation:
     get:
       summary: Pesquisa de logradouros por CEP.
-      operationId: searchPlace
+      operationId: searchPlaceByCep
       tags:
         - Search
       parameters:
@@ -30,6 +30,42 @@ paths:
                 $ref: '#/components/schemas/SearchPlaceResponse'
         '400':
           description: CEP inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Erro na requisição.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+
+  /v1/location:
+    get:
+      summary: Pesquisa de locais cadastrados por nome.
+      operationId: searchPlaceByName
+      tags:
+        - Search
+      parameters:
+        - in: query
+          name: nome
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 50
+          required: true
+      responses:
+        '200':
+          description: Local encontrado.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlaceResponse'
+        '400':
+          description: Erro ao buscar local.
           content:
             application/json:
               schema:

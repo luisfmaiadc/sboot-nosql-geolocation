@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class PlaceServiceImpl implements PlaceService {
     private final SearchPlaceMapper searchPlaceMapper;
 
     @Override
-    public SearchPlaceResponse searchPlace(String cep) {
+    public SearchPlaceResponse searchPlaceByCep(String cep) {
         URI uri = UriComponentsBuilder.fromUriString(properties.getBrasilapi().getUrl()).pathSegment(cep).build().toUri();
         try {
             ResponseEntity<BrasilApiResponse> response = restTemplate.getForEntity(uri,BrasilApiResponse.class);
@@ -48,12 +49,23 @@ public class PlaceServiceImpl implements PlaceService {
 
     @Override
     public PlaceResponse insertNewPlace(NewPlaceRequest request) {
-        SearchPlaceResponse searchPlaceResponse = searchPlace(request.getCep());
+        SearchPlaceResponse searchPlaceResponse = searchPlaceByCep(request.getCep());
         try {
             Place newPlace = repository.insert(new Place(searchPlaceResponse, request));
             return placeMapper.toPlaceResponse(newPlace);
         } catch (Exception e) {
             throw new RuntimeException("Não foi possível inserir o novo registro na base de dados.");
+        }
+    }
+
+    @Override
+    public List<PlaceResponse> searchPlaceByName(String nome) {
+        try {
+            List<Place> places = repository.findByNameContainingIgnoreCase(nome);
+            if (places.isEmpty()) return List.of();
+            return places.stream().map(placeMapper::toPlaceResponse).toList();
+        } catch (Exception e) {
+            throw new RuntimeException("Não foi possível pesquisar local por nome.");
         }
     }
 }

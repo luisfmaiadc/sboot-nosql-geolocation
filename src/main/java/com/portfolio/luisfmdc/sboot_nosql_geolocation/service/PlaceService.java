@@ -4,8 +4,11 @@ import com.portfolio.luisfmdc.model.NewPlaceRequest;
 import com.portfolio.luisfmdc.model.PlaceResponse;
 import com.portfolio.luisfmdc.model.SearchPlaceResponse;
 
+import java.util.List;
+
 public interface PlaceService {
 
-    SearchPlaceResponse searchPlace(String cep);
+    SearchPlaceResponse searchPlaceByCep(String cep);
     PlaceResponse insertNewPlace(NewPlaceRequest request);
+    List<PlaceResponse> searchPlaceByName(String name);
 }

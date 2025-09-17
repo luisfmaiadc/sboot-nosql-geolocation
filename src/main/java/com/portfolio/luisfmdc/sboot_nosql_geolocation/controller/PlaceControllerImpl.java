@@ -4,6 +4,7 @@ import com.portfolio.luisfmdc.api.V1Api;
 import com.portfolio.luisfmdc.model.NewPlaceRequest;
 import com.portfolio.luisfmdc.model.PlaceResponse;
 import com.portfolio.luisfmdc.model.SearchPlaceResponse;
+import com.portfolio.luisfmdc.model.UpdatePlaceRequest;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.service.PlaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,5 +32,10 @@ public class PlaceControllerImpl implements V1Api {
     @Override
     public ResponseEntity<List<PlaceResponse>> searchPlaceByQuery(String nome, Double latitude, Double longitude, Integer raio) {
         return new ResponseEntity<>(service.searchPlaceByQuery(nome, latitude, longitude, raio), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<PlaceResponse> updatePlace(String idPlace, UpdatePlaceRequest updatePlaceRequest) {
+        return new ResponseEntity<>(service.updatePlace(idPlace, updatePlaceRequest), HttpStatus.OK);
     }
 }

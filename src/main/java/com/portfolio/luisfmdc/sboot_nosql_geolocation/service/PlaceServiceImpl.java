@@ -3,6 +3,7 @@ package com.portfolio.luisfmdc.sboot_nosql_geolocation.service;
 import com.portfolio.luisfmdc.model.NewPlaceRequest;
 import com.portfolio.luisfmdc.model.PlaceResponse;
 import com.portfolio.luisfmdc.model.SearchPlaceResponse;
+import com.portfolio.luisfmdc.model.UpdatePlaceRequest;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.config.RouterProperties;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.config.exception.ExternalApiException;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.config.exception.InvalidArgumentException;
@@ -25,6 +26,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -76,7 +78,7 @@ public class PlaceServiceImpl implements PlaceService {
         List<Place> placeList;
 
         if (hasNome) {
-            placeList = repository.findByNameContainingIgnoreCase(nome);
+            placeList = repository.findByNameContainingIgnoreCaseAndActiveTrue(nome);
         } else {
             Point ponto = new Point(longitude, latitude);
             Distance distancia = new Distance(raio / 1000.0, Metrics.KILOMETERS);
@@ -84,5 +86,29 @@ public class PlaceServiceImpl implements PlaceService {
         }
 
         return placeList.stream().map(placeMapper::toPlaceResponse).toList();
+    }
+
+    @Override
+    public PlaceResponse updatePlace(String idPlace, UpdatePlaceRequest updatePlaceRequest) {
+        if (updatePlaceRequest.getAtivo() == null && updatePlaceRequest.getAvaliacao() == null) throw new InvalidArgumentException("Payload inválido.");
+
+        Optional<Place> optionalPlace = repository.findById(idPlace);
+        if (optionalPlace.isEmpty()) throw new ResourceNotFoundException("Não foi encontrado nenhum local com o id informado.");
+
+        Place place = optionalPlace.get();
+        updatePlaceData(place, updatePlaceRequest);
+        repository.save(place);
+
+        return placeMapper.toPlaceResponse(place);
+    }
+
+    private void updatePlaceData(Place place, UpdatePlaceRequest request) {
+        if (request.getAvaliacao() != null && !request.getAvaliacao().equals(place.getRating())) {
+            place.setRating(request.getAvaliacao());
+        }
+
+        if (request.getAtivo() != null && !request.getAtivo().equals(place.getActive())) {
+            place.setActive(request.getAtivo());
+        }
     }
 }

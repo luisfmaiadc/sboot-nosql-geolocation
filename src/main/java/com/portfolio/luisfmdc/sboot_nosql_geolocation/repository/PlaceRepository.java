@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface PlaceRepository extends MongoRepository<Place, String> {
 
-    List<Place> findByNameContainingIgnoreCase(String nome);
+    List<Place> findByNameContainingIgnoreCaseAndActiveTrue(String nome);
     List<Place> findByLocationNear(Point point, Distance distance);
 }

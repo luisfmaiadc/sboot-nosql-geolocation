@@ -32,6 +32,7 @@ public class Place {
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
     private Double rating;
+    private Boolean active;
 
     public Place(SearchPlaceResponse searchPlaceResponse, NewPlaceRequest request) {
         this.name = request.getNome();
@@ -44,5 +45,6 @@ public class Place {
         this.state = searchPlaceResponse.getEstado();
         this.location = new GeoJsonPoint(searchPlaceResponse.getGeolocalizacao().getLongitude(), searchPlaceResponse.getGeolocalizacao().getLatitude());
         this.rating = request.getAvaliacao();
+        this.active = Boolean.TRUE;
     }
 }

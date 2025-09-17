@@ -16,6 +16,7 @@ public interface PlaceMapper {
     @Mapping(source = "city", target = "cidade")
     @Mapping(source = "state", target = "estado")
     @Mapping(source = "rating", target = "avaliacao")
+    @Mapping(source = "active", target = "ativo")
     @Mapping(target = "geolocalizacao.latitude", expression = "java(place.getLocation() != null ? place.getLocation().getY() : null)")
     @Mapping(target = "geolocalizacao.longitude", expression = "java(place.getLocation() != null ? place.getLocation().getX() : null)")
     PlaceResponse toPlaceResponse(Place place);

@@ -96,19 +96,24 @@ public class PlaceServiceImpl implements PlaceService {
         if (optionalPlace.isEmpty()) throw new ResourceNotFoundException("Não foi encontrado nenhum local com o id informado.");
 
         Place place = optionalPlace.get();
-        updatePlaceData(place, updatePlaceRequest);
-        repository.save(place);
+        boolean isUpdateValid = updatePlaceData(place, updatePlaceRequest);
+        if (isUpdateValid) repository.save(place);
 
         return placeMapper.toPlaceResponse(place);
     }
 
-    private void updatePlaceData(Place place, UpdatePlaceRequest request) {
+    private boolean updatePlaceData(Place place, UpdatePlaceRequest request) {
+        boolean isUpdateValid = false;
         if (request.getAvaliacao() != null && !request.getAvaliacao().equals(place.getRating())) {
             place.setRating(request.getAvaliacao());
+            isUpdateValid = true;
         }
 
         if (request.getAtivo() != null && !request.getAtivo().equals(place.getActive())) {
             place.setActive(request.getAtivo());
+            isUpdateValid = true;
         }
+
+        return isUpdateValid;
     }
 }

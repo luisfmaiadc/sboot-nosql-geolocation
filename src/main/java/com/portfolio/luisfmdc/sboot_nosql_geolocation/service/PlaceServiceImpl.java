@@ -4,6 +4,8 @@ import com.portfolio.luisfmdc.model.NewPlaceRequest;
 import com.portfolio.luisfmdc.model.PlaceResponse;
 import com.portfolio.luisfmdc.model.SearchPlaceResponse;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.config.RouterProperties;
+import com.portfolio.luisfmdc.sboot_nosql_geolocation.config.exception.ExternalApiException;
+import com.portfolio.luisfmdc.sboot_nosql_geolocation.config.exception.InvalidArgumentException;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.config.exception.ResourceNotFoundException;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.domain.Place;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.dto.BrasilApiResponse;
@@ -11,6 +13,9 @@ import com.portfolio.luisfmdc.sboot_nosql_geolocation.mapper.PlaceMapper;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.mapper.SearchPlaceMapper;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.repository.PlaceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -35,37 +40,49 @@ public class PlaceServiceImpl implements PlaceService {
     public SearchPlaceResponse searchPlaceByCep(String cep) {
         URI uri = UriComponentsBuilder.fromUriString(properties.getBrasilapi().getUrl()).pathSegment(cep).build().toUri();
         try {
-            ResponseEntity<BrasilApiResponse> response = restTemplate.getForEntity(uri,BrasilApiResponse.class);
-            if (!response.getStatusCode().is2xxSuccessful() && response.getBody() == null) {
-                throw new RuntimeException("Resposta inválida da API externa.");
+            ResponseEntity<BrasilApiResponse> response = restTemplate.getForEntity(uri, BrasilApiResponse.class);
+            if (response.getBody() == null) {
+                throw new ExternalApiException("A API externa retornou uma resposta vazia para o CEP: " + cep);
             }
             return searchPlaceMapper.toSearchPlaceResponse(response.getBody());
         } catch (HttpClientErrorException.NotFound e) {
             throw new ResourceNotFoundException("CEP não encontrado: " + cep);
         } catch (RestClientException e) {
-            throw new RuntimeException("Erro ao se comunicar com a API de CEP: " + e.getMessage());
+            throw new ExternalApiException("Erro ao se comunicar com a API de CEP. Detalhes: " + e.getMessage());
         }
     }
 
     @Override
     public PlaceResponse insertNewPlace(NewPlaceRequest request) {
         SearchPlaceResponse searchPlaceResponse = searchPlaceByCep(request.getCep());
-        try {
-            Place newPlace = repository.insert(new Place(searchPlaceResponse, request));
-            return placeMapper.toPlaceResponse(newPlace);
-        } catch (Exception e) {
-            throw new RuntimeException("Não foi possível inserir o novo registro na base de dados.");
+        if (searchPlaceResponse.getGeolocalizacao() == null || searchPlaceResponse.getGeolocalizacao().getLatitude() == null
+                || searchPlaceResponse.getGeolocalizacao().getLongitude() == null) {
+            throw new ResourceNotFoundException("Não foi possível obter os dados de geolocalização do CEP informado.");
         }
+        Place newPlace = new Place(searchPlaceResponse, request);
+        Place savedPlace = repository.insert(newPlace);
+        return placeMapper.toPlaceResponse(savedPlace);
     }
 
     @Override
-    public List<PlaceResponse> searchPlaceByName(String nome) {
-        try {
-            List<Place> places = repository.findByNameContainingIgnoreCase(nome);
-            if (places.isEmpty()) return List.of();
-            return places.stream().map(placeMapper::toPlaceResponse).toList();
-        } catch (Exception e) {
-            throw new RuntimeException("Não foi possível pesquisar local por nome.");
+    public List<PlaceResponse> searchPlaceByQuery(String nome, Double latitude, Double longitude, Integer raio) {
+        boolean hasNome = nome != null && !nome.isBlank();
+        boolean hasGeolocalizacao = latitude != null && longitude != null && raio != null;
+
+        if (!hasNome && !hasGeolocalizacao) {
+            throw new InvalidArgumentException("É necessário fornecer um nome ou os parâmetros de geolocalização (latitude, longitude e raio).");
         }
+
+        List<Place> placeList;
+
+        if (hasNome) {
+            placeList = repository.findByNameContainingIgnoreCase(nome);
+        } else {
+            Point ponto = new Point(longitude, latitude);
+            Distance distancia = new Distance(raio / 1000.0, Metrics.KILOMETERS);
+            placeList = repository.findByLocationNear(ponto, distancia);
+        }
+
+        return placeList.stream().map(placeMapper::toPlaceResponse).toList();
     }
 }

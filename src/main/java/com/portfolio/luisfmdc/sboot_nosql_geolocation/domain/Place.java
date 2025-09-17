@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Setter
@@ -26,7 +29,8 @@ public class Place {
     private String neighborhood;
     private String city;
     private String state;
-    private Geolocation geolocation;
+    @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
+    private GeoJsonPoint location;
     private Double rating;
 
     public Place(SearchPlaceResponse searchPlaceResponse, NewPlaceRequest request) {
@@ -38,7 +42,7 @@ public class Place {
         this.neighborhood = searchPlaceResponse.getBairro();
         this.city = searchPlaceResponse.getCidade();
         this.state = searchPlaceResponse.getEstado();
-        this.geolocation = new Geolocation(searchPlaceResponse.getGeolocalizacao().getLatitude(), searchPlaceResponse.getGeolocalizacao().getLongitude());
+        this.location = new GeoJsonPoint(searchPlaceResponse.getGeolocalizacao().getLongitude(), searchPlaceResponse.getGeolocalizacao().getLatitude());
         this.rating = request.getAvaliacao();
     }
 }

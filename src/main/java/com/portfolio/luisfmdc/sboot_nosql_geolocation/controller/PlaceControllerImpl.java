@@ -29,7 +29,7 @@ public class PlaceControllerImpl implements V1Api {
     }
 
     @Override
-    public ResponseEntity<List<PlaceResponse>> searchPlaceByName(String nome) {
-        return new ResponseEntity<>(service.searchPlaceByName(nome), HttpStatus.OK);
+    public ResponseEntity<List<PlaceResponse>> searchPlaceByQuery(String nome, Double latitude, Double longitude, Integer raio) {
+        return new ResponseEntity<>(service.searchPlaceByQuery(nome, latitude, longitude, raio), HttpStatus.OK);
     }
 }

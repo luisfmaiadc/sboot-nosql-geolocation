@@ -30,8 +30,8 @@ public class PlaceControllerImpl implements V1Api {
     }
 
     @Override
-    public ResponseEntity<List<PlaceResponse>> searchPlaceByQuery(String nome, Double latitude, Double longitude, Integer raio) {
-        return new ResponseEntity<>(service.searchPlaceByQuery(nome, latitude, longitude, raio), HttpStatus.OK);
+    public ResponseEntity<List<PlaceResponse>> searchPlaceByQuery(String nome, String rua, String bairro, String cidade, String estado, Double avaliacao, Double latitude, Double longitude, Integer raio) {
+        return new ResponseEntity<>(service.searchPlaceByQuery(nome, rua, bairro, cidade, estado, avaliacao, latitude, longitude, raio), HttpStatus.OK);
     }
 
     @Override

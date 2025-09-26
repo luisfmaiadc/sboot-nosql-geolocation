@@ -17,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -25,6 +28,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +37,7 @@ import java.util.Optional;
 public class PlaceServiceImpl implements PlaceService {
 
     private final PlaceRepository repository;
+    private final MongoTemplate mongoTemplate;
     private final RouterProperties properties;
     private final RestTemplate restTemplate;
     private final PlaceMapper placeMapper;
@@ -67,25 +72,57 @@ public class PlaceServiceImpl implements PlaceService {
     }
 
     @Override
-    public List<PlaceResponse> searchPlaceByQuery(String nome, Double latitude, Double longitude, Integer raio) {
-        boolean hasNome = nome != null && !nome.isBlank();
-        boolean hasGeolocalizacao = latitude != null && longitude != null && raio != null;
+    public List<PlaceResponse> searchPlaceByQuery(String nome, String rua, String bairro, String cidade, String estado, Double avaliacao, Double latitude, Double longitude, Integer raio) {
+        List<Criteria> criteriaList = buildSearchQuery(nome, rua, bairro, cidade, estado, avaliacao, latitude, longitude, raio);
+        criteriaList.add(Criteria.where("active").is(true));
 
-        if (!hasNome && !hasGeolocalizacao) {
-            throw new InvalidArgumentException("É necessário fornecer um nome ou os parâmetros de geolocalização (latitude, longitude e raio).");
+        if (criteriaList.size() <= 1) {
+            throw new InvalidArgumentException("É necessário fornecer ao menos um critério de busca.");
         }
 
-        List<Place> placeList;
-
-        if (hasNome) {
-            placeList = repository.findByNameContainingIgnoreCaseAndActiveTrue(nome);
-        } else {
-            Point ponto = new Point(longitude, latitude);
-            Distance distancia = new Distance(raio / 1000.0, Metrics.KILOMETERS);
-            placeList = repository.findByLocationNear(ponto, distancia);
-        }
+        Query query = new Query();
+        query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
+        List<Place> placeList = mongoTemplate.find(query, Place.class);
 
         return placeList.stream().map(placeMapper::toPlaceResponse).toList();
+    }
+
+    private List<Criteria> buildSearchQuery(String nome, String rua, String bairro, String cidade, String estado, Double avaliacao, Double latitude, Double longitude, Integer raio) {
+        List<Criteria> criteriaList = new ArrayList<>();
+
+        if (nome != null && !nome.isBlank()) {
+            criteriaList.add(Criteria.where("name").regex(nome, "i"));
+        }
+
+        if (rua != null && !rua.isBlank()) {
+            criteriaList.add(Criteria.where("street").regex(rua, "i"));
+        }
+
+        if (bairro != null && !bairro.isBlank()) {
+            criteriaList.add(Criteria.where("neighborhood").regex(bairro, "i"));
+        }
+
+        if (cidade != null && !cidade.isBlank()) {
+            criteriaList.add(Criteria.where("city").is(cidade));
+        }
+
+        if (estado != null && !estado.isBlank()) {
+            criteriaList.add(Criteria.where("state").is(estado));
+        }
+
+        if (avaliacao != null) {
+            criteriaList.add(Criteria.where("rating").gte(avaliacao));
+        }
+
+        boolean hasGeolocalizacao = latitude != null && longitude != null && raio != null;
+
+        if (hasGeolocalizacao) {
+            Point ponto = new Point(longitude, latitude);
+            Distance distancia = new Distance(raio / 1000.0, Metrics.KILOMETERS);
+            criteriaList.add(Criteria.where("geolocation").nearSphere(ponto).maxDistance(distancia.getNormalizedValue()));
+        }
+
+        return criteriaList;
     }
 
     @Override

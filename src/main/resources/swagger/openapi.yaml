@@ -66,6 +66,37 @@ paths:
             type: string
             minLength: 2
             maxLength: 50
+        - name: rua
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 50
+        - name: bairro
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 50
+        - name: cidade
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 50
+        - name: estado
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 50
+        - name: avaliacao
+          in: query
+          schema:
+            type: number
+            format: double
+            minimum: 0
+            maximum: 5
         - name: latitude
           in: query
           schema:

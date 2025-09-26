@@ -11,6 +11,6 @@ public interface PlaceService {
 
     SearchPlaceResponse searchPlaceByCep(String cep);
     PlaceResponse insertNewPlace(NewPlaceRequest request);
-    List<PlaceResponse> searchPlaceByQuery(String name, Double latitude, Double longitude, Integer raio);
+    List<PlaceResponse> searchPlaceByQuery(String name, String rua, String bairro, String cidade, String estado, Double avaliacao, Double latitude, Double longitude, Integer raio);
     PlaceResponse updatePlace(String idPlace, UpdatePlaceRequest updatePlaceRequest);
 }

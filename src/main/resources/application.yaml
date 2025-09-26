@@ -8,3 +8,10 @@ spring:
 services:
   brasilapi:
     url: https://brasilapi.com.br/api/cep/v2
+
+logging:
+  level:
+    root: INFO
+    com.portfolio.luisfmdc.sboot_nosql_geolocation: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

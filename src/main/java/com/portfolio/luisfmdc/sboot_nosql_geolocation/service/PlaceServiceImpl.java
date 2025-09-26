@@ -14,6 +14,7 @@ import com.portfolio.luisfmdc.sboot_nosql_geolocation.mapper.PlaceMapper;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.mapper.SearchPlaceMapper;
 import com.portfolio.luisfmdc.sboot_nosql_geolocation.repository.PlaceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -30,8 +31,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlaceServiceImpl implements PlaceService {
@@ -45,44 +46,54 @@ public class PlaceServiceImpl implements PlaceService {
 
     @Override
     public SearchPlaceResponse searchPlaceByCep(String cep) {
+        log.info("Iniciando busca de endereço para o CEP: {}", cep);
         URI uri = UriComponentsBuilder.fromUriString(properties.getBrasilapi().getUrl()).pathSegment(cep).build().toUri();
         try {
             ResponseEntity<BrasilApiResponse> response = restTemplate.getForEntity(uri, BrasilApiResponse.class);
             if (response.getBody() == null) {
                 throw new ExternalApiException("A API externa retornou uma resposta vazia para o CEP: " + cep);
             }
+            log.info("Endereço para o CEP {} encontrado com sucesso.", cep);
             return searchPlaceMapper.toSearchPlaceResponse(response.getBody());
         } catch (HttpClientErrorException.NotFound e) {
+            log.warn("CEP {} não encontrado na API externa.", cep);
             throw new ResourceNotFoundException("CEP não encontrado: " + cep);
         } catch (RestClientException e) {
+            log.error("Erro de comunicação ao buscar o CEP {}: {}", cep, e.getMessage());
             throw new ExternalApiException("Erro ao se comunicar com a API de CEP. Detalhes: " + e.getMessage());
         }
     }
 
     @Override
     public PlaceResponse insertNewPlace(NewPlaceRequest request) {
+        log.info("Iniciando processo de inserção para o local '{}' com CEP {}", request.getNome(), request.getCep());
         SearchPlaceResponse searchPlaceResponse = searchPlaceByCep(request.getCep());
         if (searchPlaceResponse.getGeolocalizacao() == null || searchPlaceResponse.getGeolocalizacao().getLatitude() == null
                 || searchPlaceResponse.getGeolocalizacao().getLongitude() == null) {
             throw new ResourceNotFoundException("Não foi possível obter os dados de geolocalização do CEP informado.");
         }
-        Place newPlace = new Place(searchPlaceResponse, request);
-        Place savedPlace = repository.insert(newPlace);
-        return placeMapper.toPlaceResponse(savedPlace);
+        Place newPlace = repository.insert(new Place(searchPlaceResponse, request));
+        log.info("Local '{}' inserido com sucesso. ID: {}", newPlace.getName(), newPlace.getId());
+        return placeMapper.toPlaceResponse(newPlace);
     }
 
     @Override
     public List<PlaceResponse> searchPlaceByQuery(String nome, String rua, String bairro, String cidade, String estado, Double avaliacao, Double latitude, Double longitude, Integer raio) {
+        log.info("Iniciando busca por query.");
         List<Criteria> criteriaList = buildSearchQuery(nome, rua, bairro, cidade, estado, avaliacao, latitude, longitude, raio);
         criteriaList.add(Criteria.where("active").is(true));
 
         if (criteriaList.size() <= 1) {
+            log.warn("Tentativa de busca por query sem fornecer critérios válidos.");
             throw new InvalidArgumentException("É necessário fornecer ao menos um critério de busca.");
         }
 
         Query query = new Query();
         query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
+        log.debug("Executando query no MongoDB: {}", query);
+
         List<Place> placeList = mongoTemplate.find(query, Place.class);
+        log.info("Busca por query concluída. {} locais encontrados.", placeList.size());
 
         return placeList.stream().map(placeMapper::toPlaceResponse).toList();
     }
@@ -127,14 +138,29 @@ public class PlaceServiceImpl implements PlaceService {
 
     @Override
     public PlaceResponse updatePlace(String idPlace, UpdatePlaceRequest updatePlaceRequest) {
-        if (updatePlaceRequest.getAtivo() == null && updatePlaceRequest.getAvaliacao() == null) throw new InvalidArgumentException("Payload inválido.");
+        log.info("Iniciando processo de atualização para o local com ID: {}", idPlace);
 
-        Optional<Place> optionalPlace = repository.findById(idPlace);
-        if (optionalPlace.isEmpty()) throw new ResourceNotFoundException("Não foi encontrado nenhum local com o id informado.");
+        if (updatePlaceRequest.getAtivo() == null && updatePlaceRequest.getAvaliacao() == null) {
+            log.warn("Tentativa de atualização para o ID {} com payload inválido (sem campos atualizáveis).", idPlace);
+            throw new InvalidArgumentException("Payload inválido.");
+        }
 
-        Place place = optionalPlace.get();
+        Place place = repository.findById(idPlace)
+                .orElseThrow(() -> {
+                    log.warn("Local com ID {} não encontrado para atualização.", idPlace);
+                    return new ResourceNotFoundException("Não foi encontrado nenhum local com o id informado.");
+                });
+
+        log.debug("Local com ID {} encontrado. Nome: '{}'", idPlace, place.getName());
+
         boolean isUpdateValid = updatePlaceData(place, updatePlaceRequest);
-        if (isUpdateValid) repository.save(place);
+        if (isUpdateValid) {
+            log.info("Salvando alterações para o local ID {}.", idPlace);
+            repository.save(place);
+            log.info("Local ID {} atualizado com sucesso.", idPlace);
+        } else {
+            log.info("Nenhuma alteração de dados foi necessária para o local ID {}.", idPlace);
+        }
 
         return placeMapper.toPlaceResponse(place);
     }

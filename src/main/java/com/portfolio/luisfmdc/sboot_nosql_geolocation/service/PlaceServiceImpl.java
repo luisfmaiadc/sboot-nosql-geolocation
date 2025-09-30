@@ -130,7 +130,7 @@ public class PlaceServiceImpl implements PlaceService {
         if (hasGeolocalizacao) {
             Point ponto = new Point(longitude, latitude);
             Distance distancia = new Distance(raio / 1000.0, Metrics.KILOMETERS);
-            criteriaList.add(Criteria.where("geolocation").nearSphere(ponto).maxDistance(distancia.getNormalizedValue()));
+            criteriaList.add(Criteria.where("location").nearSphere(ponto).maxDistance(distancia.getNormalizedValue()));
         }
 
         return criteriaList;
